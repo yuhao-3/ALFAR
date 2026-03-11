@@ -1,6 +1,6 @@
 # ALFAR: Adaptive Logits Fusion and Attention Reallocation
 
-[![Paper](https://img.shields.io/badge/Paper-Arxiv-b31b1b)](https://arxiv.org/abs/2406.12718)
+[![Paper](https://img.shields.io/badge/Paper-Arxiv-b31b1b)](https://openreview.net/pdf/40d94836204a19bf22a4813c820925434476760b.pdf)
 
 Official implementation of the paper **"Boosting Knowledge Utilization in Multimodal Large Language Models via Adaptive Logits Fusion and Attention Reallocation"**.
 
