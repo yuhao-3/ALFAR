@@ -1,1 +1,44 @@
+# Data files
 data/wiki/wiki_with_image.npy
+data/images/
+data/
+
+# Virtual environment
+ALFAR/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Logs
+logs/
+*.log
+*.out
+*.err
+
+# Models (large files)
+models/
+*.pth
+*.bin
+*.ckpt
+
+# Libraries
+python_libs/
+
+# Results
+experiments/result/
+*.jsonl
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

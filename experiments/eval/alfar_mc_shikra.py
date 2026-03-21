@@ -3,7 +3,7 @@ import json
 from tqdm import tqdm
 import sys
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = '0,3'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0,1'
 os.environ['http_proxy'] = 'http://202.117.43.244:10007'
 os.environ['https_proxy'] = 'http://202.117.43.244:10007'
 import torch

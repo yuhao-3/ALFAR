@@ -125,17 +125,17 @@ def main():
     
     if args.dataset == "viquae":
         if args.cleaned_model is not None:
-            with open("/workspace/12_WVQA/viquae.json", "r") as fin:
+            with open("data/eval_data/mc/viquae_mc.json", "r") as fin:
                 dataset = json.load(fin)
         else:
-            with open("/workspace/12_WVQA/viquae.json", "r") as fin:
+            with open("data/eval_data/mc/viquae_mc.json", "r") as fin:
                 dataset = json.load(fin)
     elif args.dataset == "infoseek":
         if args.cleaned_model is not None:
-            with open(f"/workspace/12_WVQA/infoseek_mc.json", "r") as fin:
+            with open("data/eval_data/mc/infoseek_mc.json", "r") as fin:
                 dataset = json.load(fin)
         else:
-            with open("/workspace/12_WVQA/infoseek_mc.json", "r") as fin:
+            with open("data/eval_data/mc/infoseek_mc.json", "r") as fin:
                 dataset = json.load(fin)
         
     if args.input_file_2 is None:

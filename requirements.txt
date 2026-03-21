@@ -3,6 +3,7 @@ transformers==4.37.0
 torch==2.0.1
 tokenizers==0.15.1
 sentencepiece==0.1.99
+protobuf>=3.20.0
 shortuuid
 accelerate==0.21.0
 peft==0.4.0

@@ -27,7 +27,7 @@ import tensorflow_hub as hub
 import tensorflow_text as text
 
 
-_VOCAB_PATH = 'gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12/vocab.txt'
+_VOCAB_PATH = '/data/gpfs/projects/punim2075/ALFAR/models/bert_vocab/vocab.txt'
 _MODEL_PATH = 'https://tfhub.dev/google/answer_equivalence/bem/1'
 _PUNCTUATION_CHARACTERS = string.punctuation + '‘’´`_'
 _QUESTION_TYPES = ['templated', 'automatic', 'multi_answer', '2_hop']
@@ -452,11 +452,23 @@ def evaluate_example(
     scores.append(score)
   return max(scores)
 
-total_score = 0
-import json, os
-from tqdm import tqdm
-file = [json.loads(q) for q in open(os.path.expanduser('../experiments/result/evqa.json'), "r")]
-for item in tqdm(file):
-    score = evaluate_example(item['question'], item['reference_list'], item['candidate'], item['question_type'])
-    total_score += score
-print(total_score / len(file))
+if __name__ == "__main__":
+    import json, os
+    from tqdm import tqdm
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input_file", type=str, default='experiments/result/evqa_alfar_results.jsonl')
+    args = parser.parse_args()
+
+    total_score = 0
+    file = [json.loads(q) for q in open(os.path.expanduser(args.input_file), "r")]
+    for item in tqdm(file):
+        score = evaluate_example(item['question'], item['reference_list'], item['candidate'], item['question_type'])
+        total_score += score
+
+    avg_score = total_score / len(file)
+    print("\n" + "="*50)
+    print(f"E-VQA Score: {avg_score:.4f} ({avg_score*100:.2f}%)")
+    print(f"Total: {total_score}/{len(file)}")
+    print("="*50)

@@ -4,7 +4,7 @@ from tqdm import tqdm
 import sys
 import os
 import pandas as pd
-os.environ["CUDA_VISIBLE_DEVICES"] = '2,3'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0,1'
 import torch
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -33,7 +33,7 @@ def eval_model(args):
         questions = pd.read_csv(DATA_DIR / 'a_ok_vqa_val_fixed_annots.csv')
         knowledge = json.load(open(DATA_DIR / 'aokvqa_val_dcaption.json'))
     elif args.dataset == 'okvqa':
-        questions = pd.read_csv(DATA_DIR / 'ok_vqa_val_annots_fixed.csv')
+        questions = pd.read_csv(DATA_DIR / 'val_annots_fixed.csv')
         knowledge = json.load(open(DATA_DIR / 'okvqa_val_dcaption.json'))
     else:
         raise NotImplementedError(f"Dataset {args.dataset} not implemented.")
@@ -49,41 +49,50 @@ def eval_model(args):
     
     for i in tqdm(range(questions.shape[0])):
         test_sample = questions.iloc[i]
-        
+
         context = knowledge[str(test_sample.question_id)]
         idx = test_sample.question_id
         image_file = test_sample.image_path
+        # Handle different image filename formats (COCO_val2014_*.jpg vs *.jpg)
+        if image_file.startswith('COCO_val2014_'):
+            image_file = image_file.replace('COCO_val2014_', '')
         question = test_sample.question
+
+        # Check if image exists, skip if not
+        image_path = os.path.join(args.image_folder, image_file)
+        if not os.path.exists(image_path):
+            print(f"Warning: Image not found: {image_path}, skipping question {idx}")
+            continue
 
         if model.config.mm_use_im_start_end:
             qs = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + question
         else:
             qs = DEFAULT_IMAGE_TOKEN + '\n' + question
-        
+
 
         question_len = len(tokenizer('\n'+ question, return_tensors="pt", add_special_tokens=False).input_ids[0])
         prompt_len = len(tokenizer('Answer the question using a single word or phrase based on the given context. Context: ', return_tensors="pt", add_special_tokens=False).input_ids[0])
         context_len = len(tokenizer(context, return_tensors="pt", add_special_tokens=False).input_ids[0])
-        
+
         conv = conv_templates[args.conv_mode].copy()
         conv1 = conv_templates[args.conv_mode].copy()
         conv.append_message(conv.roles[0],  qs  + 'Answer the question using a single word or phrase based on the given context. Context: ' + context)
-        
+
         conv.append_message(conv.roles[1], None)
-        
+
         conv1.append_message(conv.roles[0],  qs + 'Answer the question using a single word or phrase based on your knowledge.')
         conv1.append_message(conv.roles[1], None)
 
 
-        
+
 
         prompt = conv.get_prompt()
         prompt1 = conv1.get_prompt()
 
         input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
         input_ids1 = tokenizer_image_token(prompt1, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
-        
-        raw_image = Image.open(os.path.join(args.image_folder, image_file)).convert('RGB')
+
+        raw_image = Image.open(image_path).convert('RGB')
         raw_image_tensor = image_processor.preprocess(raw_image, return_tensors='pt')['pixel_values'][0]
 
         
