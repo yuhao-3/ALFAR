@@ -7,8 +7,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --time=12:00:00
-#SBATCH --output=logs/infoseek_download_%j.out
-#SBATCH --error=logs/infoseek_download_%j.err
+#SBATCH --output=/data/gpfs/projects/punim2075/ALFAR/logs/infoseek_download_%j.out
+#SBATCH --error=/data/gpfs/projects/punim2075/ALFAR/logs/infoseek_download_%j.err
 
 echo "Job ID: $SLURM_JOB_ID"
 echo "Start time: $(date)"
@@ -58,7 +58,7 @@ echo "End time: $(date)"
 echo "========================================="
 
 # Check for missing images
-if [ -f missing_infoseek_images.txt ]; then
+if [ -f scripts/missing_infoseek_images.txt ]; then
     echo "Checking remaining missing images..."
     missing_count=0
     while read img_id; do
@@ -67,6 +67,6 @@ if [ -f missing_infoseek_images.txt ]; then
         if [ $found -eq 0 ]; then
             ((missing_count++))
         fi
-    done < missing_infoseek_images.txt
+    done < scripts/missing_infoseek_images.txt
     echo "Still missing: $missing_count images"
 fi

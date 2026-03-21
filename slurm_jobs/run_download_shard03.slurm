@@ -5,8 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
-#SBATCH --output=logs/download_shard03_%j.out
-#SBATCH --error=logs/download_shard03_%j.err
+#SBATCH --output=/data/gpfs/projects/punim2075/ALFAR/logs/download_shard03_%j.out
+#SBATCH --error=/data/gpfs/projects/punim2075/ALFAR/logs/download_shard03_%j.err
 
 echo "========================================="
 echo "Downloading OVEN shard03.tar"

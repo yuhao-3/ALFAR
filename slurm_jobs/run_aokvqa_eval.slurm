@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=alfar_okvqa
+#SBATCH --job-name=alfar_aokvqa
 #SBATCH --account=punim2075
 #SBATCH --partition=gpu-a100
 #SBATCH --nodes=1
@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mem=64G
 #SBATCH --time=24:00:00
-#SBATCH --output=logs/alfar_okvqa_%j.out
-#SBATCH --error=logs/alfar_okvqa_%j.err
+#SBATCH --output=/data/gpfs/projects/punim2075/ALFAR/logs/alfar_aokvqa_%j.out
+#SBATCH --error=/data/gpfs/projects/punim2075/ALFAR/logs/alfar_aokvqa_%j.err
 
 # Print some information about the job
 echo "Job ID: $SLURM_JOB_ID"
@@ -51,13 +51,13 @@ export CUDA_VISIBLE_DEVICES=0
 # Navigate to experiments/eval directory
 cd experiments/eval
 
-# Run the evaluation script on OK-VQA dataset
-echo "Starting ALFAR evaluation on OK-VQA dataset..."
+# Run the evaluation script on A-OK-VQA dataset
+echo "Starting ALFAR evaluation on A-OK-VQA dataset..."
 python alfar_okvqa_llava.py \
-    --dataset okvqa \
-    --image-folder ../../data/images/coco/val2014 \
+    --dataset aokvqa \
+    --image-folder ../../data/images/coco/val2017 \
     --model-path ../../models/llava-v1.5-7b \
-    --answers-file ../result/okvqa_alfar_results.csv \
+    --answers-file ../result/aokvqa_alfar_results.csv \
     --temperature 1.0 \
     --top_p 1.0 \
     --cd_beta 0.7 \
@@ -68,7 +68,7 @@ python alfar_okvqa_llava.py \
 if [ $? -eq 0 ]; then
     echo "========================================="
     echo "Prediction completed successfully!"
-    echo "Results saved to: experiments/result/okvqa_alfar_results.csv"
+    echo "Results saved to: experiments/result/aokvqa_alfar_results.csv"
 
     # Navigate back to project root
     cd /data/gpfs/projects/punim2075/ALFAR
@@ -76,7 +76,7 @@ if [ $? -eq 0 ]; then
     # Run evaluation
     echo "========================================="
     echo "Starting evaluation..."
-    python evaluation/eval_okvqa.py --dataset okvqa
+    python evaluation/eval_okvqa.py --dataset aokvqa
 
     echo "========================================="
     echo "All tasks completed successfully!"

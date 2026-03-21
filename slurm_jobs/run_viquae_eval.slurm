@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mem=64G
 #SBATCH --time=24:00:00
-#SBATCH --output=logs/alfar_viquae_%j.out
-#SBATCH --error=logs/alfar_viquae_%j.err
+#SBATCH --output=/data/gpfs/projects/punim2075/ALFAR/logs/alfar_viquae_%j.out
+#SBATCH --error=/data/gpfs/projects/punim2075/ALFAR/logs/alfar_viquae_%j.err
 
 # Print some information about the job
 echo "Job ID: $SLURM_JOB_ID"
