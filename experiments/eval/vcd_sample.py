@@ -20,6 +20,16 @@ import transformers
 from transformers.generation.utils import SampleEncoderDecoderOutput, SampleDecoderOnlyOutput
 from transformers.generation.streamers import BaseStreamer
 
+# Import TCVM utilities
+from tcvm_utils import (
+    get_topk_visual_indices,
+    mask_visual_kv_cache,
+    get_topk_context_indices,
+    mask_context_kv_cache,
+    tcvm_counterfactual_forward,
+    compute_tcvm_contrastive_logits
+)
+
 
 def sample(
     self,
@@ -122,15 +132,179 @@ def sample(
 
         ## For contrastive decoding initial
         use_cd = model_kwargs.get("images_cd") != None
+        use_tcvm = model_kwargs.get("use_tcvm", False)
         output_attentions_wo_img = (
             output_attentions if output_attentions is not None else self.generation_config.output_attentions
         )
         output_hidden_states_wo_img = (
             output_hidden_states if output_hidden_states is not None else self.generation_config.output_hidden_states
         )
-        
 
-        if use_cd:
+
+        if use_tcvm:
+            ## TCVM-KAR Branch: Token-Level Causal Masking with Knowledge-Aware Router
+            # Extract parameters
+            img_start_idx = model_kwargs.get('img_start_idx', 35)
+            img_end_idx = model_kwargs.get('img_end_idx', 611)
+            tcvm_topk = model_kwargs.get('tcvm_topk', 20)
+            tcvm_alpha = model_kwargs.get('tcvm_alpha', 1.0)
+            tcvm_beta = model_kwargs.get('tcvm_beta', 0.7)
+            tcvm_strategy = model_kwargs.get('tcvm_mask_strategy', 'zero')
+            tcvm_debug = model_kwargs.get('tcvm_debug', False)
+
+            # Calculate context indices if not explicitly provided
+            # This enables KAR for multimodal RAG settings
+            context_start_idx = model_kwargs.get('context_start_idx', None)
+            context_end_idx = model_kwargs.get('context_end_idx', None)
+
+            # Auto-calculate from question_len, prompt_len, and context_len if available
+            if context_start_idx is None and all(k in model_kwargs for k in ['question_len', 'prompt_len', 'context_len']):
+                question_len = model_kwargs.get('question_len')
+                prompt_len = model_kwargs.get('prompt_len')
+                context_len = model_kwargs.get('context_len')
+                context_start_idx = img_end_idx + question_len + prompt_len
+                context_end_idx = context_start_idx + context_len
+
+                if tcvm_debug:
+                    print(f"[KAR Router] Auto-calculated context indices: start={context_start_idx}, end={context_end_idx}")
+            elif context_start_idx is not None and context_end_idx is None:
+                # If start is provided but end is not, try to calculate end from context_len
+                if 'context_len' in model_kwargs:
+                    context_end_idx = context_start_idx + model_kwargs.get('context_len')
+
+            # Step 1: Extract dual attention weights (visual + context)
+            # outputs.attentions[-1] = last layer, shape: [batch, num_heads, seq_len, seq_len]
+            # Extract visual attention: [batch, num_heads, last_token, visual_tokens]
+            visual_attn_weights = outputs.attentions[-1][:, :, -1, img_start_idx:img_end_idx]
+            # Average across heads to get [batch, num_visual_tokens]
+            visual_attn_weights = visual_attn_weights.mean(dim=1)
+
+            # Extract context attention if indices are provided
+            if context_start_idx is not None and context_end_idx is not None:
+                context_attn_weights = outputs.attentions[-1][:, :, -1, context_start_idx:context_end_idx]
+                # Average across heads to get [batch, num_context_tokens]
+                context_attn_weights = context_attn_weights.mean(dim=1)
+
+                # Step 2: Compute KAR routing metric (lambda_t)
+                attn_vis_sum = visual_attn_weights.sum(dim=-1)  # [batch]
+                attn_ctx_sum = context_attn_weights.sum(dim=-1)  # [batch]
+                lambda_t = attn_vis_sum / (attn_vis_sum + attn_ctx_sum + 1e-9)  # [batch]
+
+                # Step 3: Dynamic routing decision
+                is_visual_dominant = lambda_t > 0.5  # [batch] boolean tensor
+
+                # Debugging logs
+                if tcvm_debug:
+                    step = input_ids.shape[1] - 1
+                    for batch_idx in range(lambda_t.shape[0]):
+                        modality = "Vision" if is_visual_dominant[batch_idx].item() else "Context"
+                        print(f"[KAR Router] Step {step}: lambda_t={lambda_t[batch_idx].item():.4f} -> Masking {modality}")
+
+                # Step 4: Apply routing-based masking
+                # For simplicity with batched inputs, we'll handle batch-wise masking
+                # If all samples in batch are visual-dominant or all are context-dominant, use single path
+                # Otherwise, need to handle mixed batches (more complex)
+
+                # For now, implement per-sample routing (assumes batch_size=1 or homogeneous batches)
+                batch_size = visual_attn_weights.shape[0]
+                if batch_size == 1:
+                    if is_visual_dominant[0]:
+                        # Mask visual tokens
+                        topk_indices = get_topk_visual_indices(
+                            visual_attn_weights,
+                            img_start_idx=img_start_idx,
+                            top_k=tcvm_topk
+                        )
+                        masked_past_kv = mask_visual_kv_cache(
+                            outputs.past_key_values,
+                            topk_indices,
+                            strategy=tcvm_strategy,
+                            detach=True
+                        )
+                    else:
+                        # Mask context tokens
+                        topk_indices = get_topk_context_indices(
+                            context_attn_weights,
+                            context_start_idx=context_start_idx,
+                            top_k=tcvm_topk
+                        )
+                        masked_past_kv = mask_context_kv_cache(
+                            outputs.past_key_values,
+                            topk_indices,
+                            strategy=tcvm_strategy,
+                            detach=True
+                        )
+                else:
+                    # For batched inputs, use majority voting or process each sample separately
+                    # Here we use majority voting for simplicity
+                    if is_visual_dominant.float().mean() > 0.5:
+                        # Majority is visual-dominant, mask visual for entire batch
+                        topk_indices = get_topk_visual_indices(
+                            visual_attn_weights,
+                            img_start_idx=img_start_idx,
+                            top_k=tcvm_topk
+                        )
+                        masked_past_kv = mask_visual_kv_cache(
+                            outputs.past_key_values,
+                            topk_indices,
+                            strategy=tcvm_strategy,
+                            detach=True
+                        )
+                    else:
+                        # Majority is context-dominant, mask context for entire batch
+                        topk_indices = get_topk_context_indices(
+                            context_attn_weights,
+                            context_start_idx=context_start_idx,
+                            top_k=tcvm_topk
+                        )
+                        masked_past_kv = mask_context_kv_cache(
+                            outputs.past_key_values,
+                            topk_indices,
+                            strategy=tcvm_strategy,
+                            detach=True
+                        )
+            else:
+                # Fallback: context indices not provided, use original TCVM (visual-only masking)
+                if tcvm_debug:
+                    print("[KAR Router] Context indices not provided, falling back to visual-only TCVM")
+
+                topk_visual_indices = get_topk_visual_indices(
+                    visual_attn_weights,
+                    img_start_idx=img_start_idx,
+                    top_k=tcvm_topk
+                )
+                masked_past_kv = mask_visual_kv_cache(
+                    outputs.past_key_values,
+                    topk_visual_indices,
+                    strategy=tcvm_strategy,
+                    detach=True
+                )
+
+            # Step 5: Counterfactual forward pass with masked KV cache (visual OR context)
+            next_token_logits_masked = tcvm_counterfactual_forward(
+                model=self,
+                input_ids=input_ids,
+                masked_past_kv=masked_past_kv,
+                attention_mask=model_inputs.get('attention_mask'),
+                images=None
+            )
+
+            # Step 6: Compute contrastive logits with APC
+            cd_logits = compute_tcvm_contrastive_logits(
+                logits_base=next_token_logits,
+                logits_masked=next_token_logits_masked,
+                alpha=tcvm_alpha,
+                beta=tcvm_beta,
+                apply_apc=True
+            )
+
+            # Apply temperature and sampling
+            cd_logits = logits_processor(input_ids, cd_logits)
+            cd_logits = logits_warper(input_ids, cd_logits)
+            cd_probs = nn.functional.softmax(cd_logits, dim=-1)
+            next_tokens = torch.multinomial(cd_probs, num_samples=1).squeeze(1)
+
+        elif use_cd:
             ## cd_comments: forward pass of the model with distorted image input
             model_inputs_cd = self.prepare_inputs_for_generation_cd(input_ids, **model_kwargs_cd)
             outputs_cd = self(
@@ -208,7 +382,8 @@ def sample(
             outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
         )
         ## cd_comments: update model_kwargs_cd for contrastive decoding
-        if use_cd:
+        # Only update model_kwargs_cd when using CD (not when using TCVM)
+        if use_cd and not use_tcvm:
             model_kwargs_cd = self._update_model_kwargs_for_generation(
                 outputs_cd, model_kwargs_cd, is_encoder_decoder=self.config.is_encoder_decoder
             )

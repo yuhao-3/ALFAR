@@ -458,7 +458,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_file", type=str, default='experiments/result/evqa_alfar_results.jsonl')
+    parser.add_argument("--preds", "--input_file", type=str, dest="input_file", default='experiments/result/evqa_alfar_results.jsonl')
     args = parser.parse_args()
 
     total_score = 0

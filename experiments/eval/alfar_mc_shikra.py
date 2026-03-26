@@ -186,6 +186,12 @@ def eval_model(args):
         model_inputs['img_start_idx'] = torch.nonzero(input_ids[0] == 32000, as_tuple=True)[0][0].item()
         model_inputs['img_end_idx'] = 256 + model_inputs['img_start_idx']
         model_inputs['cd_beta'] = args.cd_beta
+        # TCVM-KAR parameters
+        model_inputs['use_tcvm'] = args.use_tcvm
+        model_inputs['tcvm_topk'] = args.tcvm_topk
+        model_inputs['tcvm_alpha'] = args.tcvm_alpha
+        model_inputs['tcvm_beta'] = args.tcvm_beta
+        model_inputs['tcvm_mask_strategy'] = args.tcvm_mask_strategy
 
 
         ds1.set_image(image)
@@ -227,6 +233,12 @@ if __name__ == "__main__":
     parser.add_argument("--cd_beta", type=float, default=0.7)
     parser.add_argument("--att_alpha", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=0)
+    # TCVM-KAR parameters
+    parser.add_argument("--use_tcvm", action="store_true", help="Enable TCVM-KAR")
+    parser.add_argument("--tcvm_topk", type=int, default=20, help="Top-K tokens to mask")
+    parser.add_argument("--tcvm_alpha", type=float, default=1.0, help="Contrastive weight")
+    parser.add_argument("--tcvm_beta", type=float, default=0.7, help="APC threshold")
+    parser.add_argument("--tcvm_mask_strategy", type=str, default="zero", choices=["zero", "mean", "noise"], help="Masking strategy")
     args = parser.parse_args()
     set_seed(args.seed)
     eval_model(args)

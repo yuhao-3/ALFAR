@@ -1,0 +1,8 @@
+Model: LLaVA 1.5-7B
+Method: TCVM-KAR
+Dataset: E-VQA
+Accuracy: 35.97%
+Correct/Total: 50/139
+Date: 2026-03-25
+Config: topk=20, alpha=1.0, beta=0.7, seed=0
+Note: Gold evidence provided

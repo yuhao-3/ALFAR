@@ -116,7 +116,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--dataset", type=str, default='infoseek')
     # parser.add_argument("--dataset", type=str, default='viquae')
-    parser.add_argument("--input_file", type=str, default='/workspace/12_WVQA/experiments/eval/result/exp3.jsonl')
+    parser.add_argument("--preds", "--input_file", type=str, dest="input_file", default='/workspace/12_WVQA/experiments/eval/result/exp3.jsonl')
     parser.add_argument("--input_file_2", type=str, default=None)
     # parser.add_argument("--input_file_2", type=str, default='/workspace/12_WVQA/experiments/eval/result/exp4.jsonl')
     parser.add_argument("--cleaned_model", type=str, default=None)

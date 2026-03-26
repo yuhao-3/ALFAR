@@ -13,7 +13,7 @@ import argparse
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default='aokvqa', choices=['okvqa', 'aokvqa'])
-    parser.add_argument("--input_file", type=str, default=None)
+    parser.add_argument("--preds", "--input_file", type=str, dest="input_file", default=None)
     args = parser.parse_args()
 
     # Set default input file if not provided

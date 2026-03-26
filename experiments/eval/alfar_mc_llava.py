@@ -127,6 +127,12 @@ def eval_model(args):
                 att_alpha = args.att_alpha,
                 img_start_idx = 35,
                 img_end_idx = 611,
+                # TCVM parameters
+                use_tcvm=args.use_tcvm,
+                tcvm_topk=args.tcvm_topk,
+                tcvm_alpha=args.tcvm_alpha,
+                tcvm_beta=args.tcvm_beta,
+                tcvm_mask_strategy=args.tcvm_mask_strategy,
                 do_sample=True,
                 temperature=args.temperature,
                 top_p=args.top_p,
@@ -170,6 +176,12 @@ if __name__ == "__main__":
     parser.add_argument("--top_k", type=int, default=None)
     parser.add_argument("--cd_beta", type=float, default=0.7)
     parser.add_argument("--att_alpha", type=float, default=0.2)
+    # TCVM arguments
+    parser.add_argument("--use_tcvm", action="store_true", help="Enable TCVM decoding")
+    parser.add_argument("--tcvm_topk", type=int, default=20, help="Number of visual tokens to mask")
+    parser.add_argument("--tcvm_alpha", type=float, default=1.0, help="Contrastive penalty weight")
+    parser.add_argument("--tcvm_beta", type=float, default=0.7, help="Plausibility threshold for APC")
+    parser.add_argument("--tcvm_mask_strategy", type=str, default='zero', choices=['zero', 'mean', 'noise'], help="Masking strategy")
     parser.add_argument("--seed", type=int, default=1)
     args = parser.parse_args()
     set_seed(args.seed)

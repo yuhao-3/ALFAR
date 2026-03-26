@@ -76,6 +76,11 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         context_len: Optional[int] = None,
         ret_sim: Optional[float] = None,
         att_alpha: Optional[float] = None,
+        use_tcvm: Optional[bool] = None,
+        tcvm_topk: Optional[int] = None,
+        tcvm_alpha: Optional[float] = None,
+        tcvm_beta: Optional[float] = None,
+        tcvm_mask_strategy: Optional[str] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, CausalLMOutputWithPast]:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
@@ -130,6 +135,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         self, input_ids, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs
     ):
         llama_modify(self.model, 0, 32, True, kwargs['att_alpha'], True, kwargs['img_start_idx'], kwargs['img_end_idx'], kwargs['question_len'], kwargs['prompt_len'], kwargs['context_len'], kwargs['ret_sim'])
+
         if past_key_values:
             input_ids = input_ids[:, -1:]
 
@@ -138,7 +144,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             model_inputs = {"inputs_embeds": inputs_embeds}
         else:
             model_inputs = {"input_ids": input_ids}
-        
+
         model_inputs.update(
             {
                 "past_key_values": past_key_values,
