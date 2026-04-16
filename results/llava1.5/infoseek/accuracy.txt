@@ -1,7 +1,0 @@
-Model: LLaVA 1.5-7B
-Method: TCVM-KAR
-Dataset: InfoSeek
-Accuracy: 57.23%
-Correct/Total: 1717/3000
-Date: 2026-03-25
-Config: topk=20, alpha=1.0, beta=0.7, seed=0

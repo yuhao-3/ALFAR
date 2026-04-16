@@ -1,7 +1,0 @@
-Model: LLaVA 1.5-7B
-Method: TCVM-KAR
-Dataset: ViQuAE
-Accuracy: 57.07%
-Correct/Total: 1716/3007
-Date: 2026-03-25
-Config: topk=20, alpha=1.0, beta=0.7, seed=0

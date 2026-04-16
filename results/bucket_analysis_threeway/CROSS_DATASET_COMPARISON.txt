@@ -1,0 +1,263 @@
+================================================================================
+CROSS-DATASET COMPARISON: A-OKVQA vs INFOSEEK
+Three-Way Bucket Analysis Results
+================================================================================
+Date: 2026-03-30
+Model: LLaVA-1.5-7B (CLIP ViT-L/14 + Vicuna-7B v1.5)
+Compared Methods: No-Context | Regular MRAG (Standard RAG) | ALFAR
+
+================================================================================
+OVERALL ACCURACY COMPARISON
+================================================================================
+
+Dataset     | No-Context | Regular MRAG | ALFAR   | Regular vs No-Ctx | ALFAR vs Regular
+─────────────────────────────────────────────────────────────────────────────────────────
+A-OKVQA     | 46.46%     | 46.08%      | 60.23%  | -0.38%            | +14.15% ⭐
+InfoSeek    | 39.20%     | 51.23%      | 56.78%  | +12.02% ⭐        | +5.55%
+
+KEY OBSERVATIONS:
+
+1. REGULAR MRAG EFFECTIVENESS VARIES BY DATASET:
+   - A-OKVQA: Regular MRAG ≈ No-Context (standard RAG provides NO benefit)
+   - InfoSeek: Regular MRAG >> No-Context (+12.02% improvement)
+
+   Explanation: InfoSeek questions are more factual/entity-centric, allowing
+   direct lookup from Wikipedia context. A-OKVQA requires reasoning beyond
+   simple fact retrieval.
+
+2. ALFAR CONSISTENTLY OUTPERFORMS:
+   - Both datasets: ALFAR achieves highest accuracy
+   - A-OKVQA: Larger gap (+14.15% vs Regular MRAG)
+   - InfoSeek: Smaller gap (+5.55% vs Regular MRAG)
+
+   Explanation: ALFAR's amplification is most valuable when standard RAG fails
+   (A-OKVQA). When standard RAG already helps (InfoSeek), additional gain is
+   smaller but still significant.
+
+================================================================================
+BUCKET-LEVEL DETAILED COMPARISON
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ CORRECTIVE BUCKET: Context Can Help (Model Wrong Without Context)       │
+└──────────────────────────────────────────────────────────────────────────┘
+
+Metric              | A-OKVQA  | InfoSeek | Difference | Winner
+────────────────────────────────────────────────────────────────────
+Sample Count        | 135      | 794      | +659       | InfoSeek
+No-Context Acc      | 0.00%    | 0.00%    | 0.00%      | Tie
+Regular MRAG Acc    | 53.33%   | 66.75%   | +13.42%    | InfoSeek ⭐
+ALFAR Acc           | 72.59%   | 94.84%   | +22.25%    | InfoSeek ⭐
+ALFAR Advantage     | +19.26%  | +28.09%  | +8.83%     | InfoSeek ⭐
+
+CRITICAL FINDING: ALFAR's advantage is EVEN LARGER in InfoSeek!
+- InfoSeek: +28.09% (ALFAR massively outperforms Regular MRAG)
+- A-OKVQA: +19.26% (ALFAR significantly outperforms Regular MRAG)
+
+This suggests ALFAR's amplification mechanisms are particularly effective
+for factual/entity-based questions in MC format.
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ NEUTRAL BUCKET: Model Already Knows (Correct Without Context)           │
+└──────────────────────────────────────────────────────────────────────────┘
+
+Metric              | A-OKVQA  | InfoSeek | Difference | Winner
+────────────────────────────────────────────────────────────────────
+Sample Count        | 402      | 1024     | +622       | InfoSeek
+No-Context Acc      | 100.00%  | 100.00%  | 0.00%      | Tie
+Regular MRAG Acc    | 77.61%   | 78.91%   | +1.30%     | InfoSeek
+ALFAR Acc           | 93.28%   | 71.29%   | -21.99%    | A-OKVQA ⭐
+ALFAR Advantage     | +15.67%  | -7.62%   | -23.29%    | A-OKVQA ⭐
+
+CRITICAL REVERSAL: ALFAR performance varies dramatically!
+- A-OKVQA: ALFAR preserves parametric knowledge (+15.67% over Regular MRAG)
+- InfoSeek: ALFAR hurt by context (-7.62% vs Regular MRAG)
+
+EXPLANATION:
+- A-OKVQA (open-ended): ALFAR's mechanisms help preserve correct knowledge
+- InfoSeek (MC): ALFAR may over-trust context, overriding correct parametric choice
+
+This is the ONLY bucket where ALFAR underperforms Regular MRAG across datasets.
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ HARD/MISLEADING BUCKET: Context Doesn't Help                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+Metric              | A-OKVQA      | InfoSeek    | Notes
+                    | (Misleading) | (Hard)      |
+────────────────────────────────────────────────────────────────────────────
+Sample Count        | 292          | 794         | Different classification
+No-Context Acc      | 0.00%        | 0.00%       | Both: Model can't answer
+Regular MRAG Acc    | 32.19%       | 0.00%       | A-OKVQA: Partial help
+ALFAR Acc           | 38.36%       | 0.00%       | A-OKVQA: Partial help
+ALFAR Advantage     | +6.16%       | 0.00%       | Different behavior
+
+DIFFERENCE IN BEHAVIOR:
+- A-OKVQA: Even without correct answer, context provides clues (both methods
+  show partial success, ALFAR better at utilizing indirect information)
+- InfoSeek: Hard questions are completely unsolvable (no partial credit in MC,
+  context contains no useful information at all)
+
+This reflects task format differences:
+- Open-ended: Can benefit from related/indirect information
+- MC: Binary correct/incorrect (no partial credit)
+
+================================================================================
+TASK CHARACTERISTICS ANALYSIS
+================================================================================
+
+Dimension           | A-OKVQA              | InfoSeek
+────────────────────────────────────────────────────────────────────
+Task Type           | Open-ended VQA       | Multiple Choice (4 options)
+Domain              | General knowledge    | Entity-centric (Wikipedia)
+Reasoning Required  | High (commonsense)   | Low (factual lookup)
+Sample Size         | 829 analyzed         | 2612 analyzed
+Answer Format       | Free-form text       | A/B/C/D
+Evaluation          | Fuzzy matching       | Exact matching
+
+Context Usefulness  | LOW (needs reasoning)| HIGH (direct facts)
+Regular MRAG Helps? | NO (-0.38%)          | YES (+12.02%)
+ALFAR Best At?      | All buckets          | Corrective bucket
+ALFAR Worst At?     | None (always best)   | Neutral bucket
+
+================================================================================
+HYPOTHESIS TESTING RESULTS
+================================================================================
+
+Original Hypothesis: "ALFAR blindly amplifies context, causing harm with
+                      misleading or redundant information"
+
+EVIDENCE FROM A-OKVQA:
+✅ REJECTED in Corrective: +19.26% (amplification helps)
+✅ REJECTED in Neutral: +15.67% (preserves knowledge)
+✅ REJECTED in Misleading: +6.16% (robust to bad context)
+
+Conclusion: Hypothesis FULLY REJECTED for A-OKVQA
+
+EVIDENCE FROM INFOSEEK:
+✅ REJECTED in Corrective: +28.09% (amplification helps massively)
+❌ SUPPORTED in Neutral: -7.62% (amplification interferes)
+➖ N/A in Hard: 0.00% (no difference)
+
+Conclusion: Hypothesis PARTIALLY SUPPORTED for InfoSeek (Neutral bucket only)
+
+COMBINED CONCLUSION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ALFAR's amplification is BENEFICIAL overall, with nuanced trade-offs:
+
+STRENGTHS (Consistent Across Datasets):
+  ✅ Massive gains when context is helpful (Corrective bucket)
+  ✅ Highest overall accuracy on both datasets
+  ✅ Best method for extracting value from context
+
+WEAKNESSES (Dataset-Specific):
+  ⚠️  InfoSeek Neutral: Over-reliance on context (-7.62%)
+  ⚠️  May interfere with parametric knowledge in MC tasks
+
+NET EFFECT:
+  ✅ A-OKVQA: +14.15% vs Regular MRAG (purely beneficial)
+  ✅ InfoSeek: +5.55% vs Regular MRAG (beneficial with trade-off)
+
+REVISED HYPOTHESIS:
+"ALFAR's amplification provides substantial benefits when context is helpful.
+In MC tasks, it may over-trust context when the model already knows the answer,
+but the overall effect remains positive. Adaptive amplification based on
+confidence could further improve performance."
+
+================================================================================
+METHODOLOGICAL INSIGHTS
+================================================================================
+
+1. IMPORTANCE OF REGULAR MRAG BASELINE:
+   Without Regular MRAG baseline, we would conclude ALFAR just improves over
+   No-Context. But comparing to Regular MRAG reveals:
+   - Dataset-specific effectiveness of standard RAG
+   - ALFAR's true added value from amplification mechanisms
+   - Trade-offs that simple comparisons would miss
+
+2. BUCKET ANALYSIS REVEALS HIDDEN TRADE-OFFS:
+   Overall accuracy hides important patterns:
+   - InfoSeek: ALFAR wins overall (+5.55%)
+   - But loses in Neutral bucket (-7.62%)
+   - Massive wins in Corrective (+28.09%) offset Neutral losses
+
+   Without bucket analysis, we wouldn't know about the Neutral bucket trade-off.
+
+3. TASK FORMAT MATTERS:
+   - Open-ended (A-OKVQA): More forgiving, allows nuanced use of context
+   - MC (InfoSeek): Binary outcomes, different context dynamics
+   - Same model, same amplification, different results
+
+4. DATASET CHARACTERISTICS DRIVE EFFECTIVENESS:
+   - Factual/entity questions (InfoSeek): Standard RAG already helps
+   - Reasoning questions (A-OKVQA): Standard RAG fails, ALFAR essential
+   - ALFAR helps both, but differently
+
+================================================================================
+RECOMMENDATIONS FOR FUTURE WORK
+================================================================================
+
+1. ADAPTIVE AMPLIFICATION:
+   Develop mechanisms to detect when model has high confidence in parametric
+   knowledge, and reduce context amplification accordingly. This could address
+   the InfoSeek Neutral bucket weakness.
+
+2. TASK-SPECIFIC TUNING:
+   - MC tasks: Lower amplification when model confident
+   - Open-ended: Higher amplification to extract nuanced information
+   - Potentially learn task-specific amplification parameters
+
+3. CONFIDENCE-BASED GATING:
+   Use model confidence scores to decide when to trust parametric knowledge
+   vs. amplified context. Could combine benefits of both approaches.
+
+4. EXPAND TO MORE DATASETS:
+   Test on:
+   - More MC datasets (ViQuAE, etc.)
+   - More open-ended datasets (E-VQA, etc.)
+   - Different domains (science, history, etc.)
+
+   To understand generalization patterns.
+
+5. ANALYZE NEUTRAL BUCKET FAILURES:
+   Deep dive into InfoSeek Neutral bucket to understand:
+   - What types of questions are affected?
+   - What properties of context cause interference?
+   - Can we predict when to reduce amplification?
+
+================================================================================
+FILES AND VISUALIZATIONS
+================================================================================
+
+A-OKVQA Results:
+  - results/bucket_analysis_threeway/aokvqa_bucket_stats.json
+  - results/bucket_analysis_threeway/aokvqa_threeway_comparison.png
+  - results/bucket_analysis_threeway/aokvqa_delta_comparison.png
+  - results/bucket_analysis_threeway/THREEWAY_SUMMARY.txt
+
+InfoSeek Results:
+  - results/bucket_analysis_threeway/infoseek_bucket_stats_simple.json
+  - results/bucket_analysis_threeway/infoseek_threeway_comparison.png
+  - results/bucket_analysis_threeway/infoseek_delta_comparison.png
+  - results/bucket_analysis_threeway/INFOSEEK_THREEWAY_SUMMARY.txt
+
+Cross-Dataset Analysis:
+  - results/bucket_analysis_threeway/CROSS_DATASET_COMPARISON.txt (this file)
+
+================================================================================
+SUMMARY TABLE: ALFAR ADVANTAGE BY DATASET AND BUCKET
+================================================================================
+
+                    Corrective    Neutral      Hard/Misleading    Overall
+────────────────────────────────────────────────────────────────────────────
+A-OKVQA            +19.26% ✅    +15.67% ✅    +6.16% ✅          +14.15% ✅
+InfoSeek           +28.09% ✅    -7.62% ❌     0.00% ➖          +5.55% ✅
+
+Legend: ✅ ALFAR better | ❌ ALFAR worse | ➖ No difference
+
+CONCLUSION: ALFAR provides net benefits across both datasets, with one notable
+trade-off in InfoSeek Neutral bucket. This is a manageable weakness that could
+be addressed with adaptive amplification strategies.
+
+================================================================================

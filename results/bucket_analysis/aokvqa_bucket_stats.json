@@ -1,0 +1,20 @@
+{
+  "Corrective": {
+    "count": 135,
+    "no_context_acc": 0.0,
+    "alfar_acc": 72.5925925925926,
+    "delta": 72.5925925925926
+  },
+  "Neutral": {
+    "count": 402,
+    "no_context_acc": 100.0,
+    "alfar_acc": 93.28358208955224,
+    "delta": -6.71641791044776
+  },
+  "Misleading": {
+    "count": 292,
+    "no_context_acc": 0.0,
+    "alfar_acc": 38.35616438356164,
+    "delta": 38.35616438356164
+  }
+}

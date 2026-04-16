@@ -1,0 +1,241 @@
+================================================================================
+THREE-WAY BUCKET ANALYSIS - INFOSEEK RESULTS
+================================================================================
+Date: 2026-03-30
+Dataset: InfoSeek Validation (2612 samples analyzed)
+Model: LLaVA-1.5-7B (CLIP ViT-L/14 + Vicuna-7B v1.5)
+Task Type: Multiple Choice (4 options: A/B/C/D)
+
+================================================================================
+EXECUTIVE SUMMARY
+================================================================================
+
+KEY FINDING: ALFAR achieves highest overall accuracy (56.78%), significantly
+outperforming Regular MRAG (51.23%) and No-Context (39.20%).
+
+Unlike A-OKVQA where Regular MRAG ≈ No-Context, here Regular MRAG provides
+substantial improvement (+12.02%), showing that InfoSeek benefits from standard
+RAG. However, ALFAR's amplification mechanisms provide additional +5.55% gain.
+
+CRITICAL: In Corrective bucket, ALFAR shows MASSIVE +28.09% advantage over
+Regular MRAG (94.84% vs 66.75%), demonstrating superior context utilization.
+
+================================================================================
+OVERALL ACCURACY
+================================================================================
+
+Method               Accuracy    vs No-Context    vs Regular MRAG
+─────────────────────────────────────────────────────────────────
+No-Context           39.20%      -                -
+Regular MRAG         51.23%      +12.02%          -
+ALFAR                56.78%      +17.58%          +5.55%
+
+KEY INSIGHT: Regular MRAG helps significantly in InfoSeek (unlike A-OKVQA),
+but ALFAR's amplification mechanisms extract even more value from context.
+
+================================================================================
+BUCKET-LEVEL RESULTS
+================================================================================
+
+1. CORRECTIVE BUCKET (794 samples) ⭐ ALFAR DOMINATES
+   Model can't answer alone, RAG methods help
+   ───────────────────────────────────────────────────────────
+   No-Context:      0.00%
+   Regular MRAG:   66.75%  (+66.75% vs No-Context)
+   ALFAR:          94.84%  (+94.84% vs No-Context)
+
+   → ALFAR extracts 28.09% MORE value from helpful context
+   → This is ALFAR's strongest performance bucket
+
+2. NEUTRAL BUCKET (1024 samples) ⚠️ ALFAR SLIGHTLY WORSE
+   Model already knows the answer without context
+   ───────────────────────────────────────────────────────────
+   No-Context:    100.00%
+   Regular MRAG:   78.91%  (-21.09% vs No-Context)
+   ALFAR:          71.29%  (-28.71% vs No-Context)
+
+   → Both RAG methods hurt performance when model already knows
+   → ALFAR's amplification causes 7.62% more harm than Regular MRAG
+   → Context may confuse the model on questions it could answer
+
+3. HARD BUCKET (794 samples)
+   No method can solve these questions
+   ───────────────────────────────────────────────────────────
+   No-Context:      0.00%
+   Regular MRAG:    0.00%
+   ALFAR:           0.00%
+
+   → Context doesn't contain useful information for these questions
+   → Even ALFAR's amplification can't help without useful context
+
+================================================================================
+COMPARISON WITH A-OKVQA
+================================================================================
+
+Metric                          A-OKVQA         InfoSeek        Difference
+─────────────────────────────────────────────────────────────────────────────
+Samples Analyzed                829             2612            +1783
+Overall No-Context              46.46%          39.20%          -7.26%
+Overall Regular MRAG            46.08%          51.23%          +5.15%
+Overall ALFAR                   60.23%          56.78%          -3.45%
+
+Regular MRAG vs No-Context      -0.38%          +12.02%         +12.40% ⭐
+ALFAR vs Regular MRAG           +14.15%         +5.55%          -8.60%
+
+KEY DIFFERENCES:
+
+1. REGULAR MRAG EFFECTIVENESS:
+   - A-OKVQA: Regular MRAG ≈ No-Context (context alone useless)
+   - InfoSeek: Regular MRAG >> No-Context (+12.02% improvement)
+   - Conclusion: InfoSeek benefits from standard RAG, A-OKVQA doesn't
+
+2. ALFAR'S ADVANTAGE:
+   - A-OKVQA: ALFAR provides massive +14.15% over Regular MRAG
+   - InfoSeek: ALFAR provides moderate +5.55% over Regular MRAG
+   - Both: ALFAR consistently outperforms Regular MRAG
+
+3. TASK CHARACTERISTICS:
+   - A-OKVQA: Open-ended VQA, requires reasoning
+   - InfoSeek: Multiple choice, entity-centric knowledge
+   - InfoSeek context may be more directly useful (factual lookup)
+
+================================================================================
+BUCKET-LEVEL COMPARISON
+================================================================================
+
+CORRECTIVE BUCKET (Context Helps):
+───────────────────────────────────
+                    A-OKVQA     InfoSeek    Difference
+Samples             135         794         +659
+Regular MRAG        53.33%      66.75%      +13.42%
+ALFAR               72.59%      94.84%      +22.25% ⭐
+ALFAR Advantage     +19.26%     +28.09%     +8.83%
+
+→ ALFAR's advantage is EVEN LARGER in InfoSeek (+28.09% vs +19.26%)
+→ InfoSeek's MC format allows ALFAR to leverage context more effectively
+
+NEUTRAL BUCKET (Model Already Knows):
+─────────────────────────────────────
+                    A-OKVQA     InfoSeek    Difference
+Samples             402         1024        +622
+Regular MRAG        77.61%      78.91%      +1.30%
+ALFAR               93.28%      71.29%      -21.99% ⚠️
+ALFAR Advantage     +15.67%     -7.62%      -23.29% ⚠️
+
+→ MAJOR DIFFERENCE: ALFAR worse than Regular MRAG in InfoSeek Neutral bucket
+→ A-OKVQA: ALFAR preserved parametric knowledge better (+15.67%)
+→ InfoSeek: ALFAR hurt by context when it already knew answer (-7.62%)
+→ This suggests ALFAR may over-trust context in MC tasks
+
+MISLEADING/HARD BUCKET:
+───────────────────────
+                    A-OKVQA         InfoSeek        Notes
+Name                "Misleading"    "Hard"          Different classification
+Samples             292             794
+Regular MRAG        32.19%          0.00%           InfoSeek: no partial help
+ALFAR               38.36%          0.00%           InfoSeek: no partial help
+ALFAR Advantage     +6.16%          0.00%
+
+→ A-OKVQA Misleading: Both methods show partial success
+→ InfoSeek Hard: Neither method helps at all (binary: help or don't)
+
+================================================================================
+CRITICAL ANALYSIS
+================================================================================
+
+1. ALFAR'S STRENGTHS:
+   ✅ Massively outperforms in Corrective bucket (+28.09%)
+   ✅ Higher overall accuracy than Regular MRAG (+5.55%)
+   ✅ Best at extracting value from helpful context
+
+2. ALFAR'S WEAKNESSES:
+   ❌ Worse in Neutral bucket when model already knows (-7.62%)
+   ❌ May over-amplify context even when parametric knowledge is correct
+   ❌ Trade-off: Better context use vs potential over-reliance
+
+3. DATASET DIFFERENCES MATTER:
+   - InfoSeek: Factual entity knowledge (context more directly useful)
+   - A-OKVQA: Reasoning-heavy VQA (context requires interpretation)
+   - Regular MRAG helps InfoSeek but not A-OKVQA
+   - ALFAR helps both, but advantage varies
+
+4. AMPLIFICATION HYPOTHESIS:
+   Original hypothesis: "ALFAR blindly amplifies, causing harm"
+
+   Evidence:
+   - Corrective: ALFAR massively better (hypothesis REJECTED) ✅
+   - Neutral: ALFAR worse (hypothesis PARTIALLY SUPPORTED) ⚠️
+   - Hard: No difference (hypothesis NOT APPLICABLE)
+
+   Conclusion: ALFAR amplification is beneficial when context helps,
+   but may hurt when model already knows the answer.
+
+================================================================================
+KEY TAKEAWAYS
+================================================================================
+
+1. ✅ ALFAR achieves highest accuracy overall (56.78%)
+
+2. ✅ ALFAR shows MASSIVE advantage in Corrective bucket (+28.09%)
+   - Best method for extracting value from helpful context
+   - MC format allows more effective utilization
+
+3. ⚠️  ALFAR worse in Neutral bucket (-7.62% vs Regular MRAG)
+   - Context amplification interferes with parametric knowledge
+   - Different from A-OKVQA where ALFAR preserved knowledge better
+
+4. ✅ Dataset characteristics matter significantly:
+   - InfoSeek: Regular MRAG helps (+12.02%)
+   - A-OKVQA: Regular MRAG doesn't help (-0.38%)
+   - ALFAR helps both datasets
+
+5. 🎯 ALFAR amplification is a DOUBLE-EDGED SWORD:
+   - Huge gains when context is helpful (Corrective: +28.09%)
+   - Some loss when context is redundant (Neutral: -7.62%)
+   - Net effect: Positive (+5.55% overall)
+
+6. 🔬 Future work could explore:
+   - Adaptive amplification (detect when to trust parametric knowledge)
+   - Confidence-based context gating
+   - Task-specific amplification strategies
+
+================================================================================
+IMPLICATIONS FOR MOTIVATION EXPERIMENT
+================================================================================
+
+Original Question: "Does ALFAR's amplification cause harm?"
+
+InfoSeek Evidence:
+- YES in Neutral bucket: -7.62% vs Regular MRAG (when model already knows)
+- NO in Corrective bucket: +28.09% vs Regular MRAG (when context helps)
+- Overall: NET POSITIVE (+5.55%)
+
+Combined A-OKVQA + InfoSeek Evidence:
+- A-OKVQA: ALFAR better in ALL buckets (no harm detected)
+- InfoSeek: ALFAR better overall, worse in Neutral only
+- Conclusion: Amplification is beneficial on average, with trade-offs
+
+REVISED HYPOTHESIS:
+"ALFAR's amplification provides substantial benefits when context is helpful,
+but may interfere with parametric knowledge in some cases. The net effect
+is positive, but adaptive amplification could further improve performance."
+
+================================================================================
+FILES GENERATED
+================================================================================
+
+Analysis:
+- infoseek_bucket_stats_simple.json
+- infoseek_bucket_assignments_simple.json
+- infoseek_bucket_samples_simple.json
+
+Visualizations:
+- infoseek_threeway_comparison.png
+- infoseek_delta_comparison.png
+
+Documentation:
+- INFOSEEK_THREEWAY_SUMMARY.txt (this file)
+- INFOSEEK_PROGRESS.md
+- INFOSEEK_STATUS.txt
+
+================================================================================

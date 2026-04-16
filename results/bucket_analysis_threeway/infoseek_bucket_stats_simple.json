@@ -1,0 +1,29 @@
+{
+  "Corrective": {
+    "count": 794,
+    "no_context_acc": 0.0,
+    "regular_mrag_acc": 66.75062972292191,
+    "alfar_acc": 94.83627204030228,
+    "delta_regular_mrag": 66.75062972292191,
+    "delta_alfar": 94.83627204030228,
+    "delta_alfar_vs_regular": 28.085642317380362
+  },
+  "Neutral": {
+    "count": 1024,
+    "no_context_acc": 100.0,
+    "regular_mrag_acc": 78.90625,
+    "alfar_acc": 71.2890625,
+    "delta_regular_mrag": -21.09375,
+    "delta_alfar": -28.7109375,
+    "delta_alfar_vs_regular": -7.6171875
+  },
+  "Hard": {
+    "count": 794,
+    "no_context_acc": 0.0,
+    "regular_mrag_acc": 0.0,
+    "alfar_acc": 0.0,
+    "delta_regular_mrag": 0.0,
+    "delta_alfar": 0.0,
+    "delta_alfar_vs_regular": 0.0
+  }
+}

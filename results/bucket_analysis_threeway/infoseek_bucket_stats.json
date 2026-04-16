@@ -1,0 +1,29 @@
+{
+  "Corrective": {
+    "count": 484,
+    "no_context_acc": 0.0,
+    "regular_mrag_acc": 74.17355371900827,
+    "alfar_acc": 82.85123966942149,
+    "delta_regular_mrag": 74.17355371900827,
+    "delta_alfar": 82.85123966942149,
+    "delta_alfar_vs_regular": 8.67768595041322
+  },
+  "Neutral": {
+    "count": 343,
+    "no_context_acc": 100.0,
+    "regular_mrag_acc": 92.71137026239067,
+    "alfar_acc": 93.58600583090379,
+    "delta_regular_mrag": -7.288629737609327,
+    "delta_alfar": -6.413994169096213,
+    "delta_alfar_vs_regular": 0.8746355685131135
+  },
+  "Misleading": {
+    "count": 1104,
+    "no_context_acc": 0.0,
+    "regular_mrag_acc": 15.489130434782608,
+    "alfar_acc": 31.88405797101449,
+    "delta_regular_mrag": 15.489130434782608,
+    "delta_alfar": 31.88405797101449,
+    "delta_alfar_vs_regular": 16.394927536231883
+  }
+}

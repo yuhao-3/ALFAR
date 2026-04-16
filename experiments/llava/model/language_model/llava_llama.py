@@ -76,11 +76,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         context_len: Optional[int] = None,
         ret_sim: Optional[float] = None,
         att_alpha: Optional[float] = None,
-        use_tcvm: Optional[bool] = None,
-        tcvm_topk: Optional[int] = None,
-        tcvm_alpha: Optional[float] = None,
-        tcvm_beta: Optional[float] = None,
-        tcvm_mask_strategy: Optional[str] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, CausalLMOutputWithPast]:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions

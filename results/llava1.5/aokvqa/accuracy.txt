@@ -1,8 +1,0 @@
-Model: LLaVA 1.5-7B
-Method: TCVM-KAR
-Dataset: A-OKVQA
-Accuracy: 59.71%
-Correct/Total: 683.67/1145
-Date: 2026-03-25
-Config: topk=20, alpha=1.0, beta=0.7, seed=0
-Note: Soft accuracy with partial credit scoring
